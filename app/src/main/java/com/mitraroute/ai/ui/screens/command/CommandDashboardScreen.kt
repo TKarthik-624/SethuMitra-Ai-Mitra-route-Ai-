@@ -65,7 +65,7 @@ fun CommandDashboardScreen(
             TopAppBar(
                 title = {
                     Text(
-                        text = "MITRAROUTE",
+                        text = "SETUMITRA",
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Black,
                         color = Emerald400

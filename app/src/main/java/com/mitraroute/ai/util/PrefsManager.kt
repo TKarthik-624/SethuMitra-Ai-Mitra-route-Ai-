@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.runBlocking
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "mitraroute_prefs")
+private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "setumitra_prefs")
 
 class PrefsManager(private val context: Context) {
 

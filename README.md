@@ -1,4 +1,4 @@
-# MitraRoute AI — Android App 🗺️
+# SetuMitra AI — Android App 🗺️
 
 **AI-Based Smart Logistics & Accessibility Intelligence Platform for North Eastern Region (NER)**
 
@@ -10,17 +10,16 @@ Built for SIH 2026 Problem Statement 26002 — Team SetuMitra AI
 - **🤖 AI Risk Engine** — Tap any route to get real-time risk scoring (weather + incidents + terrain)
 - **📋 Incident Reporting** — Report road damage, floods, landslides with severity and GPS coordinates
 - **📡 Offline Support** — Incidents queue locally and sync when network returns (WorkManager)
-- **🌤️ Weather Dashboard** — Live weather data for 6 NER cities
+- **🌤️ Weather Dashboard** — Live weather data
 - **📊 Dashboard** — Stats overview with active incidents and sync status
-- **🌐 Multi-Language** — English, Hindi, Assamese, Bengali, Manipuri
-- **🔐 RBAC** — Role-based access (Admin, District Officer, Field Agent)
+- **🌐 Multi-Language** — English, Hindi, Assamese, Bengali, Telugu, etc.
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
 | UI | Kotlin + Jetpack Compose + Material 3 |
-| Map | osmdroid (OpenStreetMap) |
+| Map | Google Maps SDK |
 | Networking | Retrofit + OkHttp + Kotlinx Serialization |
 | Database | Room (SQLite) |
 | Offline Sync | WorkManager |
@@ -31,10 +30,10 @@ Built for SIH 2026 Problem Statement 26002 — Team SetuMitra AI
 
 ### 1. Start the Backend Server
 
-The Android app needs the MitraRoute API server running.
+The Android app needs the SetuMitra API server running.
 
 ```bash
-cd ../mitraroute  # from the backend directory
+cd ../setumitra  # from the backend directory
 pip install -r requirements.txt
 uvicorn backend.main:app --host 0.0.0.0 --port 8000
 ```
@@ -42,7 +41,7 @@ uvicorn backend.main:app --host 0.0.0.0 --port 8000
 ### 2. Open in Android Studio
 
 1. Open Android Studio
-2. File → Open → Select `MitraRouteApp/` folder
+2. File → Open → Select `SetuMitraApp/` folder
 3. Wait for Gradle sync to complete
 4. If prompted about SDK versions, install the required SDK (API 34)
 
@@ -63,78 +62,37 @@ buildConfigField("String", "API_BASE_URL", "\"http://YOUR_PC_IP:8000/\"")
 - Select a device/emulator
 - Click ▶️ Run
 
-## Demo Accounts
-
-| Username | Password | Role |
-|----------|----------|------|
-| admin | admin123 | Administrator |
-| field_agent1 | demo123 | Field Agent (Assam) |
-| field_agent2 | demo123 | Field Agent (Meghalaya) |
-| officer1 | demo123 | District Officer |
-
 ## Project Structure
 
 ```
-MitraRouteApp/
+SetuMitraApp/
 ├── app/src/main/
 │   ├── AndroidManifest.xml
 │   ├── java/com/mitraroute/ai/
 │   │   ├── MainActivity.kt
-│   │   ├── MitraRouteApp.kt          # Application (osmdroid + WorkManager init)
+│   │   ├── SetuMitraApp.kt          # Application init
 │   │   ├── data/
 │   │   │   ├── api/                   # Retrofit API service
-│   │   │   ├── model/                 # Data classes (Route, Incident, Weather, etc.)
+│   │   │   ├── model/                 # Data classes
 │   │   │   ├── local/                 # Room database + DAOs
-│   │   │   └── repository/            # Repository (API + cache + offline queue)
+│   │   │   └── repository/            # Repository (API + cache + providers)
 │   │   ├── ui/
-│   │   │   ├── theme/                 # Dark theme (Color, Type, Theme)
-│   │   │   ├── navigation/            # Bottom nav with 4 tabs
+│   │   │   ├── theme/                 # SetuMitraTheme
+│   │   │   ├── navigation/            # Bottom nav
 │   │   │   ├── screens/
-│   │   │   │   ├── login/             # Login screen + ViewModel
-│   │   │   │   ├── map/               # osmdroid map + risk panel
-│   │   │   │   ├── report/            # Incident form + map click
-│   │   │   │   ├── weather/           # Weather grid
-│   │   │   │   └── dashboard/         # Stats + incident list
-│   │   │   └── components/            # RiskBadge, IncidentCard, WeatherCard
+│   │   │   │   ├── map/               # Map screen
+│   │   │   │   ├── report/            # Incident reporting
+│   │   │   │   ├── weather/           # Weather overview
+│   │   │   │   └── command/           # Home dashboard
+│   │   │   └── components/            # RiskBadge, WeatherCard
 │   │   └── util/
 │   │       ├── PrefsManager.kt        # DataStore preferences
-│   │       └── OfflineSyncWorker.kt   # WorkManager background sync
+│   │       └── LocationTracker.kt     # GPS Tracking
 │   └── res/
 │       ├── values/                    # English strings
 │       ├── values-hi/                 # Hindi
-│       ├── values-as/                 # Assamese
-│       ├── values-bn/                 # Bengali
-│       └── values-mn/                 # Manipuri
+│       └── ...
 ├── build.gradle.kts                   # Project-level
 ├── app/build.gradle.kts               # App dependencies
 └── gradle/libs.versions.toml          # Version catalog
-```
-
-## Architecture
-
-```
-┌─────────────────────────────────────────┐
-│         Jetpack Compose UI              │
-│  Map │ Report │ Weather │ Dashboard     │
-└──────────────┬──────────────────────────┘
-               │ StateFlow
-┌──────────────▼──────────────────────────┐
-│            ViewModels                   │
-│  MapVM │ ReportVM │ WeatherVM │ DashVM  │
-└──────────────┬──────────────────────────┘
-               │
-┌──────────────▼──────────────────────────┐
-│          Repository Layer               │
-│  API calls → Room cache → Offline queue │
-└──────────┬──────────┬───────────────────┘
-           │          │
-    ┌──────▼──┐  ┌────▼─────┐
-    │ Retrofit│  │   Room   │
-    │  (API)  │  │  (Cache) │
-    └────┬────┘  └──────────┘
-         │
-┌────────▼────────────────────────────────┐
-│   FastAPI Backend (mitraroute/)          │
-│   AI Risk Engine │ Weather │ RBAC       │
-└─────────────────────────────────────────┘
 ```

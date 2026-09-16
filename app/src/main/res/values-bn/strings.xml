@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">মিত্রারুট AI</string>
+    <string name="app_name">SetuMitra AI</string>
     <string name="nav_map">রাস্তার মানচিত্র</string>
     <string name="nav_report">রিপোর্ট</string>
     <string name="nav_weather">আবহাওয়া</string>

@@ -5,7 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mitraroute.ai.data.model.DashboardStats
 import com.mitraroute.ai.data.model.Incident
-import com.mitraroute.ai.data.repository.MitraRouteRepository
+import com.mitraroute.ai.data.repository.SetuMitraRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -19,7 +19,7 @@ data class DashboardUiState(
 
 class DashboardViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repo = MitraRouteRepository.getInstance(application)
+    private val repo = SetuMitraRepository.getInstance(application)
     private val _uiState = MutableStateFlow(DashboardUiState())
     val uiState = _uiState.asStateFlow()
 

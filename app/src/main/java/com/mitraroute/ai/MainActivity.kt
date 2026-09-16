@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import com.mitraroute.ai.ui.navigation.AppNavigation
-import com.mitraroute.ai.ui.theme.MitraRouteTheme
+import com.mitraroute.ai.ui.theme.SetuMitraTheme
 import com.mitraroute.ai.util.PrefsManager
 import java.util.Locale
 
@@ -33,7 +33,7 @@ class MainActivity : ComponentActivity() {
             configuration.setLocale(locale)
             resources.updateConfiguration(configuration, resources.displayMetrics)
 
-            MitraRouteTheme {
+            SetuMitraTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

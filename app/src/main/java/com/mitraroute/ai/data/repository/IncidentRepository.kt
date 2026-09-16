@@ -13,7 +13,7 @@ interface IncidentRepository {
     suspend fun getIncidentsNear(lat: Double, lng: Double, radiusKm: Double = 50.0): Flow<List<Incident>>
 }
 
-class IncidentRepositoryImpl(private val repo: MitraRouteRepository) : IncidentRepository {
+class IncidentRepositoryImpl(private val repo: SetuMitraRepository) : IncidentRepository {
     override suspend fun getVerifiedIncidents(): Flow<List<Incident>> {
         return repo.getIncidents()
     }

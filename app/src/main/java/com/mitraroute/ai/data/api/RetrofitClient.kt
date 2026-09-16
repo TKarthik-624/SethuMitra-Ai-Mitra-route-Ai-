@@ -23,7 +23,7 @@ object RetrofitClient {
         .writeTimeout(30, TimeUnit.SECONDS)
         .addInterceptor { chain ->
             val request = chain.request().newBuilder()
-                .header("User-Agent", "MitraRouteAI-SIH2026-DriverApp")
+                .header("User-Agent", "SetuMitraAI-SIH2026-DriverApp")
                 .build()
             chain.proceed(request)
         }

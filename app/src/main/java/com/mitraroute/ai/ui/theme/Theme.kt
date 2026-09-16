@@ -43,7 +43,7 @@ private val LightColorScheme = lightColorScheme(
 )
 
 @Composable
-fun MitraRouteTheme(
+fun SetuMitraTheme(
     darkTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {

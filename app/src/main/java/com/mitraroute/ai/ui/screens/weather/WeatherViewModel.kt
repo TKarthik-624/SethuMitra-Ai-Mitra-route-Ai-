@@ -5,7 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.mitraroute.ai.data.model.LatLonLiteral
 import com.mitraroute.ai.data.model.OpenMeteoResponse
-import com.mitraroute.ai.data.repository.MitraRouteRepository
+import com.mitraroute.ai.data.repository.SetuMitraRepository
 import com.mitraroute.ai.util.LocationTracker
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +20,7 @@ data class WeatherUiState(
 
 class WeatherViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repo = MitraRouteRepository.getInstance(application)
+    private val repo = SetuMitraRepository.getInstance(application)
     private val locationTracker = LocationTracker(application)
     
     private val _uiState = MutableStateFlow(WeatherUiState())

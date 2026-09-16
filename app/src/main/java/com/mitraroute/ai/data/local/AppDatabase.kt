@@ -171,7 +171,7 @@ abstract class AppDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     AppDatabase::class.java,
-                    "mitraroute_db"
+                    "setumitra_db"
                 ).fallbackToDestructiveMigration().build()
                 INSTANCE = instance
                 instance

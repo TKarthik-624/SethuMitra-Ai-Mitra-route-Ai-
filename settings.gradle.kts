@@ -15,5 +15,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "MitraRouteApp"
+rootProject.name = "SetuMitraApp"
 include(":app")
