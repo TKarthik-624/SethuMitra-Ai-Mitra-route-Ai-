@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MitraRoute AI</string>
+    <string name="nav_map">روٹ میپ</string>
+    <string name="nav_report">رپورٹ</string>
+    <string name="nav_weather">موسم</string>
+    <string name="nav_dashboard">تجزیہ</string>
+    <string name="nav_command_dashboard">ہوم</string>
+    <string name="nav_planner">روٹ پلانر</string>
+    <string name="nav_settings">ترتیبات</string>
+    <string name="nav_ai">AI بصیرت</string>
+    <string name="nav_hospitals">قریبی ہسپتال</string>
+    <string name="settings_title">ترتیبات</string>
+    <string name="settings_language">زبان</string>
+    <string name="settings_units">اکائیاں</string>
+    <string name="settings_notifications">اطلاعات</string>
+    <string name="settings_voice">صوتی امداد</string>
+    <string name="settings_km">کلومیٹر</string>
+    <string name="settings_miles">میل</string>
+    <string name="settings_on">آن</string>
+    <string name="settings_off">آف</string>
+    <string name="risk_low">کم خطرہ</string>
+    <string name="risk_medium">درمیانہ خطرہ</string>
+    <string name="risk_high">زیادہ خطرہ</string>
+    <string name="risk_critical">انتہائی خطرہ - پرہیز کریں</string>
+    <string name="weather_title">موسم کا جائزہ</string>
+    <string name="weather_loading">موسم کا ڈیٹا لوڈ ہو رہا ہے…</string>
+    <string name="weather_data_unavailable">موسم کا ڈیٹا دستیاب نہیں ہے</string>
+    <string name="dashboard_active_incidents">فعال واقعات</string>
+    <string name="dashboard_total_routes">کل راستے</string>
+    <string name="dashboard_critical_routes">خطرناک راستے</string>
+    <string name="dashboard_total_users">صارفین</string>
+    <string name="dashboard_no_incidents">کوئی فعال واقعہ نہیں</string>
+    <string name="retry">دوبارہ کوشش کریں</string>
+    <string name="cancel">منسوخ کریں</string>
+    <string name="ok">ٹھیک ہے</string>
+    <string name="loading">لوڈ ہو رہا ہے…</string>
+    <string name="no_data">ڈیٹا دستیاب نہیں ہے</string>
+</resources>

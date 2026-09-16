@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MitraRoute AI</string>
+    <string name="nav_map">ಮಾರ್ಗ ನಕ್ಷೆ</string>
+    <string name="nav_report">ವರದಿ</string>
+    <string name="nav_weather">ಹವಾಮಾನ</string>
+    <string name="nav_dashboard">ವಿಶ್ಲೇಷಣೆ</string>
+    <string name="nav_command_dashboard">ಹೋಮ್</string>
+    <string name="nav_planner">ಮಾರ್ಗ ಯೋಜಕ</string>
+    <string name="nav_settings">ಸೆಟ್ಟಿಂಗ್‌ಗಳು</string>
+    <string name="nav_ai">AI ಒಳನೋಟ</string>
+    <string name="nav_hospitals">ಹತ್ತಿರದ ಆಸ್ಪತ್ರೆಗಳು</string>
+    <string name="settings_title">ಸೆಟ್ಟಿಂಗ್‌ಗಳು</string>
+    <string name="settings_language">ಭಾಷೆ</string>
+    <string name="settings_units">ಘಟಕಗಳು</string>
+    <string name="settings_notifications">ಅಧಿಸೂಚನೆಗಳು</string>
+    <string name="settings_voice">ಧ್ವನಿ ಸಹಾಯ</string>
+    <string name="settings_km">ಕಿಲೋಮೀಟರ್‌ಗಳು</string>
+    <string name="settings_miles">ಮೈಲಿಗಳು</string>
+    <string name="settings_on">ಆನ್</string>
+    <string name="settings_off">ಆಫ್</string>
+    <string name="risk_low">ಕಡಿಮೆ ಅಪಾಯ</string>
+    <string name="risk_medium">ಮಧ್ಯಮ ಅಪಾಯ</string>
+    <string name="risk_high">ಹೆಚ್ಚಿನ ಅಪಾಯ</string>
+    <string name="risk_critical">ಅತಿ ಅಪಾಯ - ತಪ್ಪಿಸಿ</string>
+    <string name="weather_title">ಹವಾಮಾನ ಅವಲೋಕನ</string>
+    <string name="weather_loading">ಹವಾಮಾನ ಡೇಟಾ ಲೋಡ್ ಆಗುತ್ತಿದೆ…</string>
+    <string name="weather_data_unavailable">ಹವಾಮಾನ ಡೇಟಾ ಲಭ್ಯವಿಲ್ಲ</string>
+    <string name="dashboard_active_incidents">ಸಕ್ರಿಯ ಘಟನೆಗಳು</string>
+    <string name="dashboard_total_routes">ಒಟ್ಟು ಮಾರ್ಗಗಳು</string>
+    <string name="dashboard_critical_routes">ನಿರ್ಣಾಯಕ ಮಾರ್ಗಗಳು</string>
+    <string name="dashboard_total_users">ಬಳಕೆದಾರರು</string>
+    <string name="dashboard_no_incidents">ಯಾವುದೇ ಸಕ್ರಿಯ ಘಟನೆಗಳಿಲ್ಲ</string>
+    <string name="retry">ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ</string>
+    <string name="cancel">ರದ್ದುಮಾಡಿ</string>
+    <string name="ok">ಸರಿ</string>
+    <string name="loading">ಲೋಡ್ ಆಗುತ್ತಿದೆ…</string>
+    <string name="no_data">ಡೇಟಾ ಲಭ್ಯವಿಲ್ಲ</string>
+</resources>

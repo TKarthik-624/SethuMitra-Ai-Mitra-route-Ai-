@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">মিত্ৰাৰুট AI</string>
+    <string name="nav_map">পথৰ মানচিত্ৰ</string>
+    <string name="nav_report">ৰিপৰ্ট</string>
+    <string name="nav_weather">বতৰ</string>
+    <string name="nav_dashboard">এনালিটিক্স</string>
+    <string name="nav_command_dashboard">হোম</string>
+    <string name="nav_planner">ৰুট প্লেনাৰ</string>
+    <string name="nav_settings">ছেটিংছ</string>
+    <string name="nav_ai">AI অন্তৰ্দৃষ্টি</string>
+    <string name="nav_hospitals">ওচৰৰ চিকিৎসালয়</string>
+    <string name="settings_title">ছেটিংছ</string>
+    <string name="settings_language">ভাষা</string>
+    <string name="settings_units">একক</string>
+    <string name="settings_notifications">জাননী</string>
+    <string name="settings_voice">ভইচ সহায়</string>
+    <string name="settings_km">কিলোমিটাৰ</string>
+    <string name="settings_miles">মাইল</string>
+    <string name="settings_on">অন</string>
+    <string name="settings_off">অফ</string>
+    <string name="risk_low">কম বিপদাশংকা</string>
+    <string name="risk_medium">মধ্যম বিপদাশংকা</string>
+    <string name="risk_high">উচ্চ বিপদাশংকা</string>
+    <string name="risk_critical">গুৰুতৰ - এৰাই চলক</string>
+    <string name="weather_title">বতৰৰ অৱলোকন</string>
+    <string name="weather_loading">বতৰৰ তথ্য লোড হৈছে…</string>
+    <string name="weather_data_unavailable">বতৰৰ তথ্য উপলব্ধ নহয়</string>
+    <string name="dashboard_active_incidents">সক্ৰিয় ঘটনা</string>
+    <string name="dashboard_total_routes">মুঠ পথ</string>
+    <string name="dashboard_critical_routes">গুৰুতৰ পথ</string>
+    <string name="dashboard_total_users">ব্যৱহাৰকাৰী</string>
+    <string name="dashboard_no_incidents">কোনো সক্ৰিয় ঘটনা নাই</string>
+    <string name="retry">পুনৰ চেষ্টা কৰক</string>
+    <string name="cancel">বাতিল কৰক</string>
+    <string name="ok">ঠিক আছে</string>
+    <string name="loading">লোড হৈছে…</string>
+    <string name="no_data">তথ্য উপলব্ধ নহয়</string>
+</resources>

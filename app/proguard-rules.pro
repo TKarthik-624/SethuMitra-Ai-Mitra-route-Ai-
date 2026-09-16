@@ -1,0 +1,5 @@
+-keep class com.mitraroute.ai.data.model.** { *; }
+-keepattributes Signature
+-keepattributes *Annotation*
+-dontwarn org.osmdroid.**
+-keep class org.osmdroid.** { *; }

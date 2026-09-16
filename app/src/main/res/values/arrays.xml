@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="incident_types">
+        <item>road_damage</item>
+        <item>flood</item>
+        <item>landslide</item>
+        <item>bridge_failure</item>
+        <item>weather_blockage</item>
+        <item>vehicle_breakdown</item>
+        <item>other</item>
+    </string-array>
+
+    <string-array name="incident_type_labels">
+        <item>Road Damage</item>
+        <item>Flood</item>
+        <item>Landslide</item>
+        <item>Bridge Failure</item>
+        <item>Weather Blockage</item>
+        <item>Vehicle Breakdown</item>
+        <item>Other</item>
+    </string-array>
+
+    <string-array name="incident_type_icons">
+        <item>🚧</item>
+        <item>🌊</item>
+        <item>⛰️</item>
+        <item>🌉</item>
+        <item>🌫️</item>
+        <item>🚛</item>
+        <item>⚠️</item>
+    </string-array>
+
+    <string-array name="language_codes">
+        <item>en</item>
+        <item>hi</item>
+        <item>as</item>
+        <item>bn</item>
+        <item>mn</item>
+    </string-array>
+
+    <string-array name="language_names">
+        <item>English</item>
+        <item>हिन्दी</item>
+        <item>অসমীয়া</item>
+        <item>বাংলা</item>
+        <item>মৈতৈলোন্</item>
+    </string-array>
+</resources>

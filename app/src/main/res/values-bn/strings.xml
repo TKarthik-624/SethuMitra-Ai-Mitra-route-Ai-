@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">মিত্রারুট AI</string>
+    <string name="nav_map">রাস্তার মানচিত্র</string>
+    <string name="nav_report">রিপোর্ট</string>
+    <string name="nav_weather">আবহাওয়া</string>
+    <string name="nav_dashboard">অ্যানালিটিক্স</string>
+    <string name="nav_command_dashboard">হোম</string>
+    <string name="nav_planner">রুট প্ল্যানার</string>
+    <string name="nav_settings">সেটিংস</string>
+    <string name="nav_ai">AI অন্তর্দৃষ্টি</string>
+    <string name="nav_hospitals">কাছাকাছি হাসপাতাল</string>
+    <string name="settings_title">সেটিংস</string>
+    <string name="settings_language">ভাষা</string>
+    <string name="settings_units">ইউনিট</string>
+    <string name="settings_notifications">নোটিফিকেশন</string>
+    <string name="settings_voice">ভয়েস সহায়তা</string>
+    <string name="settings_km">কিলোমিটার</string>
+    <string name="settings_miles">মাইল</string>
+    <string name="settings_on">অন</string>
+    <string name="settings_off">অফ</string>
+    <string name="risk_low">কম ঝুঁকি</string>
+    <string name="risk_medium">মাঝারি ঝুঁকি</string>
+    <string name="risk_high">উচ্চ ঝুঁকি</string>
+    <string name="risk_critical">গুরুতর - এড়িয়ে চলুন</string>
+    <string name="weather_title">আবহাওয়ার ওভারভিউ</string>
+    <string name="weather_loading">আবহাওয়ার তথ্য লোড হচ্ছে…</string>
+    <string name="weather_data_unavailable">আবহাওয়ার তথ্য উপলব্ধ নেই</string>
+    <string name="dashboard_active_incidents">সক্রিয় ঘটনা</string>
+    <string name="dashboard_total_routes">মোট রুট</string>
+    <string name="dashboard_critical_routes">গুরুতর রুট</string>
+    <string name="dashboard_total_users">ব্যবহারকারী</string>
+    <string name="dashboard_no_incidents">কোনো সক্রিয় ঘটনা নেই</string>
+    <string name="retry">আবার চেষ্টা করুন</string>
+    <string name="cancel">বাতিল</string>
+    <string name="ok">ঠিক আছে</string>
+    <string name="loading">লোড হচ্ছে…</string>
+    <string name="no_data">তথ্য উপলব্ধ নেই</string>
+</resources>
