@@ -78,7 +78,14 @@ data class ModernStep(
     val startLocation: WaypointLocation? = null,
     val endLocation: WaypointLocation? = null,
     val travelMode: String? = null,
+    val navigationInstruction: NavigationInstruction? = null,
     val transitDetails: TransitDetails? = null
+)
+
+@Serializable
+data class NavigationInstruction(
+    val maneuver: String? = null,
+    val instructions: String? = null
 )
 
 @Serializable

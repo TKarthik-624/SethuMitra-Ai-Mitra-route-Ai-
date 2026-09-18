@@ -2,16 +2,24 @@ package com.mitraroute.ai.util
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Path
 import android.location.Geocoder
 import android.location.Location
 import android.os.Looper
 import android.util.Log
+import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -52,8 +60,10 @@ class LocationTracker(private val context: Context) {
     fun startLocationTracking(onLocationUpdate: (Location) -> Unit) {
         currentOnLocationUpdate = onLocationUpdate
         val request = LocationRequest.Builder(
-            Priority.PRIORITY_HIGH_ACCURACY, 10000
-        ).setMinUpdateIntervalMillis(5000).build()
+            Priority.PRIORITY_HIGH_ACCURACY, 2000 // Update every 2 seconds
+        ).setMinUpdateIntervalMillis(1000) // Minimum 1 second
+            .setWaitForAccurateLocation(false)
+            .build()
 
         client.requestLocationUpdates(request, locationCallback, Looper.getMainLooper())
     }
@@ -127,6 +137,27 @@ class LocationTracker(private val context: Context) {
                 poly.add(p)
             }
             return poly
+        }
+
+        fun createDirectionalArrow(): BitmapDescriptor {
+            val size = 64
+            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            val paint = Paint().apply {
+                color = Color.parseColor("#3B82F6")
+                style = Paint.Style.FILL
+                isAntiAlias = true
+            }
+            
+            val path = Path()
+            path.moveTo(size / 2f, 0f)
+            path.lineTo(size.toFloat(), size.toFloat())
+            path.lineTo(size / 2f, size * 0.7f)
+            path.lineTo(0f, size.toFloat())
+            path.close()
+            
+            canvas.drawPath(path, paint)
+            return BitmapDescriptorFactory.fromBitmap(bitmap)
         }
     }
 }

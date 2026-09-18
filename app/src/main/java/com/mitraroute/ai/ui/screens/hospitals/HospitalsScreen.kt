@@ -76,6 +76,15 @@ fun HospitalsScreen(
                     items(state.hospitals) { hospital ->
                         HospitalCard(hospital)
                     }
+                    item {
+                        Text(
+                            text = "Powered by Google",
+                            modifier = Modifier.fillMaxWidth().padding(16.dp),
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = TextMuted
+                        )
+                    }
                     item { Spacer(modifier = Modifier.height(32.dp)) }
                 }
             }

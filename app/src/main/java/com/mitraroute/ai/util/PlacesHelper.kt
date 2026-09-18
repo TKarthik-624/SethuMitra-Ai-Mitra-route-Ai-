@@ -79,33 +79,28 @@ class PlacesHelper(context: Context) {
 
     suspend fun getNearbyHospitals(lat: Double, lon: Double): List<NearbyPlaceResult> {
         val placeFields = listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS)
-        
-        // SearchByText is available in SDK 3.3.0+ but let's check if it's there
-        // If not, we might need a different approach or REST if SDK version is too old for "New" API
-        // Version 3.5.0 should have it.
-        
         val center = LatLng(lat, lon)
-        val circle = CircularBounds.newInstance(center, 5000.0)
+        val circle = CircularBounds.newInstance(center, 10000.0)
         
         val request = SearchByTextRequest.builder("hospital", placeFields)
             .setLocationBias(circle)
-            .setMaxResultCount(10)
+            .setMaxResultCount(15)
             .build()
 
         return try {
             val response = placesClient.searchByText(request).await()
-            Log.d("PLACES_HELPER", "Nearby hospitals success")
+            Log.d("PLACES_HELPER", "Nearby hospitals success: ${response.places.size}")
             response.places.map { place ->
                 NearbyPlaceResult(
-                    name = place.name ?: "Hospital",
+                    name = place.name ?: "Medical Facility",
                     vicinity = place.address,
                     place_id = place.id ?: "",
                     geometry = PlaceGeometry(LatLonLiteral(place.latLng?.latitude ?: 0.0, place.latLng?.longitude ?: 0.0))
                 )
             }
         } catch (e: Exception) {
-            Log.e("PLACES_HELPER", "Nearby hospitals error: ${e.message}")
-            emptyList()
+            Log.e("PLACES_HELPER", "Google Nearby Search failed: ${e.message}")
+            throw e // Let the provider catch and fallback
         }
     }
 }

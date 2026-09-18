@@ -3,6 +3,7 @@ package com.mitraroute.ai.data.repository
 import android.util.Log
 import com.mitraroute.ai.data.api.ApiService
 import com.mitraroute.ai.data.model.*
+import com.mitraroute.ai.util.PlacesHelper
 import kotlinx.coroutines.flow.Flow
 
 // ---------- Interfaces ----------
@@ -26,21 +27,12 @@ interface HospitalProvider {
 
 // ---------- Implementations ----------
 
-class FreeGeocodingProvider(private val api: ApiService) : GeocodingProvider {
+class FreeGeocodingProvider(
+    private val api: ApiService,
+    private val placesHelper: PlacesHelper
+) : GeocodingProvider {
     override suspend fun searchPlaces(query: String): List<PlacePrediction> {
-        return try {
-            val response = api.searchNominatim(query)
-            if (response.isSuccessful) {
-                response.body()?.map {
-                    PlacePrediction(
-                        description = it.display_name,
-                        place_id = "osm_${it.osm_id}_${it.lat}_${it.lon}"
-                    )
-                } ?: emptyList()
-            } else emptyList()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        return placesHelper.getAutocompletePredictions(query, true) // Defaulting to true for session tracking
     }
 
     override suspend fun reverseGeocode(lat: Double, lon: Double): String {
@@ -66,8 +58,30 @@ class FreeRoutingProvider(private val api: ApiService) : RoutingProvider {
                 response.body()?.routes?.map {
                     ModernRoute(
                         distanceMeters = it.distance.toInt(),
-                        duration = "${it.duration}s",
+                        duration = "${it.distance / (55.0 / 3.6)}s", 
                         polyline = ModernPolyline(it.geometry),
+                        legs = it.legs.map { leg ->
+                            ModernLeg(
+                                distanceMeters = leg.distance.toInt(),
+                                duration = "${leg.duration}s",
+                                steps = leg.steps.map { step ->
+                                    val maneuverLoc = step.maneuver?.location
+                                    val startLoc = if (maneuverLoc != null && maneuverLoc.size >= 2) {
+                                        WaypointLocation(LatLonLiteral(maneuverLoc[1], maneuverLoc[0]))
+                                    } else null
+                                    
+                                    ModernStep(
+                                        distanceMeters = step.distance.toInt(),
+                                        travelMode = "DRIVE",
+                                        navigationInstruction = NavigationInstruction(
+                                            maneuver = step.maneuver?.type,
+                                            instructions = step.instruction ?: step.name
+                                        ),
+                                        startLocation = startLoc
+                                    )
+                                }
+                            )
+                        },
                         warnings = emptyList(),
                         routeLabels = listOf("FASTEST")
                     )
@@ -90,6 +104,21 @@ class OpenMeteoWeatherProvider(private val api: ApiService) : WeatherProvider {
             if (response.isSuccessful) response.body() else null
         } catch (e: Exception) {
             null
+        }
+    }
+}
+
+class GoogleHospitalProvider(
+    private val api: ApiService,
+    private val placesHelper: PlacesHelper
+) : HospitalProvider {
+    override suspend fun getNearbyHospitals(lat: Double, lon: Double): List<NearbyPlaceResult> {
+        return try {
+            placesHelper.getNearbyHospitals(lat, lon)
+        } catch (e: Exception) {
+            Log.w("HOSPITAL_PROVIDER", "Google Search failed, falling back to OSM")
+            val osmProvider = OsmHospitalProvider(api)
+            osmProvider.getNearbyHospitals(lat, lon)
         }
     }
 }

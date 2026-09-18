@@ -87,10 +87,19 @@ fun AIScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
                             text = state.summary,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MaterialTheme.typography.bodyMedium,
                             color = TextPrimary,
-                            lineHeight = 24.sp
+                            lineHeight = 20.sp
                         )
+                    }
+                }
+                
+                if (state.transitOptions.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text("LIVE TRANSIT DETAILS", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = Emerald400)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    state.transitOptions.forEach { opt ->
+                        TransitCard(opt)
                     }
                 }
                 
@@ -102,6 +111,28 @@ fun AIScreen(
                     color = TextMuted,
                     textAlign = TextAlign.Center
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun TransitCard(opt: TransitOption) {
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        colors = CardDefaults.cardColors(containerColor = DarkInput),
+        border = BorderStroke(1.dp, DarkBorder)
+    ) {
+        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Text(if (opt.type == "BUS") "🚌" else "🚆", fontSize = 20.sp)
+            Spacer(Modifier.width(12.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text("${opt.type}: ${opt.serviceName}", fontWeight = FontWeight.Bold, fontSize = 14.sp)
+                Text("Dep: ${opt.departureTime} • Arr: ${opt.arrivalTime}", fontSize = 12.sp, color = TextMuted)
+                Text("${opt.stops} stops • ${opt.transfers} transfers", fontSize = 11.sp, color = TextMuted)
+            }
+            if (opt.fare != null) {
+                Text(opt.fare, fontWeight = FontWeight.Black, color = Amber400, fontSize = 14.sp)
             }
         }
     }

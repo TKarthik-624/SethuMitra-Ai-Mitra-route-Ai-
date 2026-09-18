@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.firstOrNull
+import com.mitraroute.ai.data.model.LatLonLiteral
 import kotlinx.serialization.Serializable
 
 data class AIUiState(
@@ -56,13 +57,15 @@ class AIViewModel(application: Application) : AndroidViewModel(application) {
                     mr.legs.flatMap { leg ->
                         leg.steps.filter { it.travelMode == "TRANSIT" && it.transitDetails != null }.map { step ->
                             val details = step.transitDetails!!
+                            val stopDetails = details.stopDetails
+                            
                             TransitOption(
                                 type = details.transitLine?.vehicle?.type ?: "TRANSIT",
-                                serviceName = details.transitLine?.nameShort ?: details.transitLine?.name ?: "Public Service",
-                                departureTime = details.stopDetails?.departureTime ?: "",
-                                arrivalTime = details.stopDetails?.arrivalTime ?: "",
-                                duration = step.staticDuration ?: "",
-                                transfers = mr.legs.firstOrNull()?.steps?.count { it.travelMode == "TRANSIT" }?.minus(1)?.coerceAtLeast(0) ?: 0,
+                                serviceName = details.transitLine?.name ?: details.transitLine?.nameShort ?: "Public Transit",
+                                departureTime = stopDetails?.departureTime ?: "",
+                                arrivalTime = stopDetails?.arrivalTime ?: "",
+                                duration = step.staticDuration ?: "N/A",
+                                transfers = leg.steps.count { it.travelMode == "TRANSIT" } - 1,
                                 stops = details.stopCount ?: 0,
                                 fare = mr.localizedValues?.transitFare?.text
                             )

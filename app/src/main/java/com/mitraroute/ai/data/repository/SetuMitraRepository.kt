@@ -5,13 +5,16 @@ import com.mitraroute.ai.BuildConfig
 import com.mitraroute.ai.data.api.RetrofitClient
 import com.mitraroute.ai.data.local.*
 import com.mitraroute.ai.data.model.*
+import com.mitraroute.ai.util.PlacesHelper
 import com.mitraroute.ai.util.PrefsManager
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.runBlocking
 
 class SetuMitraRepository private constructor(context: Context) {
 
+    private val placesHelper = PlacesHelper(context)
     private val api = RetrofitClient.api
     private val db = AppDatabase.getInstance(context)
     private val routeDao = db.routeDao()
@@ -34,10 +37,18 @@ class SetuMitraRepository private constructor(context: Context) {
     }
 
     // Providers
-    val geocoding: GeocodingProvider = FreeGeocodingProvider(api)
+    val geocoding: GeocodingProvider = FreeGeocodingProvider(api, placesHelper)
     val routing: RoutingProvider = FreeRoutingProvider(api)
     val weather: WeatherProvider = OpenMeteoWeatherProvider(api)
-    val hospitals: HospitalProvider = OsmHospitalProvider(api)
+    val hospitals: HospitalProvider = GoogleHospitalProvider(api, placesHelper)
+
+    suspend fun searchPlaces(query: String, isFrom: Boolean): List<PlacePrediction> {
+        return placesHelper.getAutocompletePredictions(query, isFrom)
+    }
+
+    suspend fun getPlaceDetails(placeId: String, isFrom: Boolean): PlaceDetailResult? {
+        return placesHelper.getPlaceDetails(placeId, isFrom)
+    }
 
     // Shared state for screens
     private var _latestPlannedRoute: ModernRoute? = null

@@ -1,9 +1,11 @@
 package com.mitraroute.ai.ui.screens.planner
 
 import android.app.Application
+import android.location.Location
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.gms.maps.model.LatLng
 import com.mitraroute.ai.data.model.*
 import com.mitraroute.ai.data.repository.SetuMitraRepository
 import com.mitraroute.ai.util.LocationTracker
@@ -22,7 +24,8 @@ data class RouteDetail(
     val weatherSummary: String,
     val warnings: List<String>,
     val polylinePoints: String,
-    val colorHex: String
+    val colorHex: String,
+    val steps: List<ModernStep> = emptyList()
 )
 
 data class PlannerUiState(
@@ -37,8 +40,18 @@ data class PlannerUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val canCheckRoute: Boolean = false,
-    val currentLatLng: LatLonLiteral? = null
+    val currentLatLng: LatLonLiteral? = null,
+    val currentBearing: Float = 0f,
+    val navigationState: NavigationState = NavigationState.IDLE,
+    val currentStepIndex: Int = 0,
+    val remainingDistance: String = "",
+    val remainingDuration: String = "",
+    val nextInstruction: String = ""
 )
+
+enum class NavigationState {
+    IDLE, ROUTE_READY, NAVIGATING, ARRIVED, ERROR
+}
 
 class RoutePlannerViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -51,28 +64,49 @@ class RoutePlannerViewModel(application: Application) : AndroidViewModel(applica
     private var fromSearchJob: Job? = null
     private var toSearchJob: Job? = null
 
+    private var lastRecalculationTime = 0L
+
     init {
         useCurrentLocationAsOrigin()
-        startTracking()
+        observeLocationUpdates()
+        locationTracker.startLocationTracking { /* init tracking */ }
     }
 
-    private fun startTracking() {
-        locationTracker.startLocationTracking { location ->
-            _uiState.value = _uiState.value.copy(
-                currentLatLng = LatLonLiteral(location.latitude, location.longitude)
-            )
+    private fun observeLocationUpdates() {
+        viewModelScope.launch {
+            locationTracker.locationFlow.collect { location ->
+                if (location != null) {
+                    val latLng = LatLonLiteral(location.latitude, location.longitude)
+                    _uiState.value = _uiState.value.copy(
+                        currentLatLng = latLng,
+                        currentBearing = location.bearing
+                    )
+                    
+                    if (_uiState.value.navigationState == NavigationState.NAVIGATING) {
+                        processNavigationUpdate(location)
+                    }
+                }
+            }
         }
     }
 
+    private fun startTracking() {
+        locationTracker.startLocationTracking { /* handled via flow */ }
+    }
+
     fun updateFromQuery(query: String) {
-        _uiState.value = _uiState.value.copy(fromQuery = query, selectedFrom = null)
+        _uiState.value = _uiState.value.copy(fromQuery = query, selectedFrom = null, error = null)
         validateInputs()
         fromSearchJob?.cancel()
-        if (query.length >= 2) {
+        if (query.isNotEmpty() && query != "Current Location" && query.length >= 2) {
             fromSearchJob = viewModelScope.launch {
-                delay(500)
-                val results = repo.geocoding.searchPlaces(query)
-                _uiState.value = _uiState.value.copy(fromPredictions = results)
+                delay(300)
+                try {
+                    val results = repo.searchPlaces(query, isFrom = true)
+                    _uiState.value = _uiState.value.copy(fromPredictions = results)
+                } catch (e: Exception) {
+                    Log.e("PLANNER_VM", "Search FROM failed: ${e.message}")
+                }
             }
         } else {
             _uiState.value = _uiState.value.copy(fromPredictions = emptyList())
@@ -80,14 +114,18 @@ class RoutePlannerViewModel(application: Application) : AndroidViewModel(applica
     }
 
     fun updateToQuery(query: String) {
-        _uiState.value = _uiState.value.copy(toQuery = query, selectedTo = null)
+        _uiState.value = _uiState.value.copy(toQuery = query, selectedTo = null, error = null)
         validateInputs()
         toSearchJob?.cancel()
-        if (query.length >= 2) {
+        if (query.isNotEmpty() && query.length >= 2) {
             toSearchJob = viewModelScope.launch {
-                delay(500)
-                val results = repo.geocoding.searchPlaces(query)
-                _uiState.value = _uiState.value.copy(toPredictions = results)
+                delay(300)
+                try {
+                    val results = repo.searchPlaces(query, isFrom = false)
+                    _uiState.value = _uiState.value.copy(toPredictions = results)
+                } catch (e: Exception) {
+                    Log.e("PLANNER_VM", "Search TO failed: ${e.message}")
+                }
             }
         } else {
             _uiState.value = _uiState.value.copy(toPredictions = emptyList())
@@ -160,40 +198,45 @@ class RoutePlannerViewModel(application: Application) : AndroidViewModel(applica
     }
 
     fun selectFrom(prediction: PlacePrediction) {
-        // Predictions from Nominatim have Lat/Lon encoded in ID as "osm_id_lat_lon"
-        val parts = prediction.place_id.split("_")
-        if (parts.size >= 4) {
-            val lat = parts[2].toDoubleOrNull() ?: 0.0
-            val lon = parts[3].toDoubleOrNull() ?: 0.0
-            val detail = PlaceDetailResult(
-                geometry = PlaceGeometry(LatLonLiteral(lat, lon)),
-                formatted_address = prediction.description,
-                name = prediction.description.split(",").first()
-            )
-            _uiState.value = _uiState.value.copy(
-                selectedFrom = detail,
-                fromQuery = detail.name,
-                fromPredictions = emptyList()
-            )
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, fromPredictions = emptyList(), error = null)
+            try {
+                val detail = repo.getPlaceDetails(prediction.place_id, isFrom = true)
+                if (detail != null) {
+                    _uiState.value = _uiState.value.copy(
+                        selectedFrom = detail,
+                        fromQuery = detail.name,
+                        isLoading = false
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(isLoading = false, error = "Could not resolve start location.")
+                }
+            } catch (e: Exception) {
+                Log.e("PLANNER_VM", "Select FROM failed: ${e.message}")
+                _uiState.value = _uiState.value.copy(isLoading = false, error = "Location selection failed.")
+            }
             validateInputs()
         }
     }
 
     fun selectTo(prediction: PlacePrediction) {
-        val parts = prediction.place_id.split("_")
-        if (parts.size >= 4) {
-            val lat = parts[2].toDoubleOrNull() ?: 0.0
-            val lon = parts[3].toDoubleOrNull() ?: 0.0
-            val detail = PlaceDetailResult(
-                geometry = PlaceGeometry(LatLonLiteral(lat, lon)),
-                formatted_address = prediction.description,
-                name = prediction.description.split(",").first()
-            )
-            _uiState.value = _uiState.value.copy(
-                selectedTo = detail,
-                toQuery = detail.name,
-                toPredictions = emptyList()
-            )
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, toPredictions = emptyList(), error = null)
+            try {
+                val detail = repo.getPlaceDetails(prediction.place_id, isFrom = false)
+                if (detail != null) {
+                    _uiState.value = _uiState.value.copy(
+                        selectedTo = detail,
+                        toQuery = detail.name,
+                        isLoading = false
+                    )
+                } else {
+                    _uiState.value = _uiState.value.copy(isLoading = false, error = "Could not resolve destination.")
+                }
+            } catch (e: Exception) {
+                Log.e("PLANNER_VM", "Select TO failed: ${e.message}")
+                _uiState.value = _uiState.value.copy(isLoading = false, error = "Location selection failed.")
+            }
             validateInputs()
         }
     }
@@ -238,13 +281,15 @@ class RoutePlannerViewModel(application: Application) : AndroidViewModel(applica
                             weatherSummary = weatherSum,
                             warnings = if (weatherRisk > 0) listOf("Caution: Rain reported at destination.") else listOf("Road conditions standard."),
                             polylinePoints = mr.polyline.encodedPolyline,
-                            colorHex = if (index == 0) "#06B6D4" else "#10B981"
+                            colorHex = if (index == 0) "#06B6D4" else "#10B981",
+                            steps = mr.legs.flatMap { it.steps }
                         )
                     }
                     _uiState.value = _uiState.value.copy(
                         routes = enhanced,
                         selectedRouteIndex = 0,
-                        isLoading = false
+                        isLoading = false,
+                        navigationState = NavigationState.ROUTE_READY
                     )
 
                     // Save the recommended route for AI analysis
@@ -288,6 +333,111 @@ class RoutePlannerViewModel(application: Application) : AndroidViewModel(applica
 
     fun selectRoute(index: Int) {
         _uiState.value = _uiState.value.copy(selectedRouteIndex = index)
+    }
+
+    fun startNavigation() {
+        val state = _uiState.value
+        if (state.routes.isNotEmpty()) {
+            _uiState.value = state.copy(
+                navigationState = NavigationState.NAVIGATING,
+                currentStepIndex = 0
+            )
+            locationTracker.startLocationTracking { /* flow takes over */ }
+        }
+    }
+
+    fun stopNavigation() {
+        _uiState.value = _uiState.value.copy(navigationState = NavigationState.ROUTE_READY)
+        // Keep tracking if we want live map, but stop nav processing
+    }
+
+    private fun processNavigationUpdate(location: Location) {
+        val state = _uiState.value
+        val currentRoute = state.routes.getOrNull(state.selectedRouteIndex) ?: return
+        
+        // 1. Off-route detection
+        val points = LocationTracker.decodePolyline(currentRoute.polylinePoints)
+        val nearestDistance = findNearestDistance(location, points)
+        
+        val now = System.currentTimeMillis()
+        if (nearestDistance > 200 && now - lastRecalculationTime > 15000) { 
+            Log.d("PLANNER_VM", "Off-route detected ($nearestDistance m). Recalculating...")
+            lastRecalculationTime = now
+            checkRoute() 
+            return
+        }
+
+        // 2. Progress and Instructions
+        // Simple logic: find nearest step
+        val steps = currentRoute.steps
+        if (steps.isNotEmpty()) {
+            // Find step user is currently on (simplification)
+            val currentLatLng = LatLonLiteral(location.latitude, location.longitude)
+            val nearestStepIndex = findNearestStepIndex(currentLatLng, steps)
+            
+            val nextStep = steps.getOrNull(nearestStepIndex + 1)
+            val instruction = nextStep?.navigationInstruction?.instructions ?: "Continue to destination"
+            
+            // 3. Arrival check
+            val destination = state.selectedTo?.geometry?.location
+            if (destination != null) {
+                val distToDest = calculatePhysicalDistance(location.latitude, location.longitude, destination.lat, destination.lng)
+                if (distToDest < 50) { // 50 meters
+                    _uiState.value = _uiState.value.copy(navigationState = NavigationState.ARRIVED)
+                    return
+                }
+            }
+
+            // 4. Update Estimates
+            val remainingSteps = steps.drop(nearestStepIndex)
+            val remDistMeters = remainingSteps.sumOf { it.distanceMeters ?: 0 }
+            val remSeconds = remDistMeters / (55.0 / 3.6)
+
+            _uiState.value = _uiState.value.copy(
+                currentStepIndex = nearestStepIndex,
+                nextInstruction = instruction,
+                remainingDistance = "%.1f km".format(remDistMeters / 1000.0),
+                remainingDuration = formatDuration(remSeconds)
+            )
+        }
+    }
+
+    private fun findNearestDistance(location: Location, points: List<LatLng>): Double {
+        var minDistance = Double.MAX_VALUE
+        for (point in points) {
+            val dist = calculatePhysicalDistance(location.latitude, location.longitude, point.latitude, point.longitude)
+            if (dist < minDistance) minDistance = dist
+        }
+        return minDistance
+    }
+
+    private fun findNearestStepIndex(current: LatLonLiteral, steps: List<ModernStep>): Int {
+        var nearestIdx = 0
+        var minDistance = Double.MAX_VALUE
+        steps.forEachIndexed { index, step ->
+            val start = step.startLocation?.latLng ?: return@forEachIndexed
+            val dist = calculatePhysicalDistance(current.lat, current.lng, start.lat, start.lng)
+            if (dist < minDistance) {
+                minDistance = dist
+                nearestIdx = index
+            }
+        }
+        return nearestIdx
+    }
+
+    private fun calculatePhysicalDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val r = 6371e3 // metres
+        val phi1 = Math.toRadians(lat1)
+        val phi2 = Math.toRadians(lat2)
+        val deltaPhi = Math.toRadians(lat2 - lat1)
+        val deltaLambda = Math.toRadians(lon2 - lon1)
+
+        val a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+                Math.cos(phi1) * Math.cos(phi2) *
+                Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2)
+        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+
+        return r * c
     }
 
     override fun onCleared() {

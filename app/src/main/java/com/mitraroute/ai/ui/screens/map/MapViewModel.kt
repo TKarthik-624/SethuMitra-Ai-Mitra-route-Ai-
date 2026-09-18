@@ -21,6 +21,7 @@ data class MapUiState(
     val riskLevel: String = "low",
     val riskFactors: List<String> = emptyList(),
     val userLocation: LatLonLiteral? = null,
+    val userBearing: Float = 0f,
     val isLoading: Boolean = false,
     val error: String? = null
 )
@@ -41,7 +42,8 @@ class MapViewModel(application: Application) : AndroidViewModel(application) {
     private fun startTracking() {
         locationTracker.startLocationTracking { location ->
             _uiState.value = _uiState.value.copy(
-                userLocation = LatLonLiteral(location.latitude, location.longitude)
+                userLocation = LatLonLiteral(location.latitude, location.longitude),
+                userBearing = location.bearing
             )
         }
     }

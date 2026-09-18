@@ -299,7 +299,8 @@ data class OsrmStep(
 @Serializable
 data class OsrmManeuver(
     val type: String? = null,
-    val instruction: String? = null
+    val instruction: String? = null,
+    val location: List<Double> = emptyList()
 )
 
 // ---------- Nominatim Models ----------

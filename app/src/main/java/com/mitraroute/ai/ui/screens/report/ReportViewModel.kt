@@ -28,7 +28,10 @@ data class ReportUiState(
     val mapPinLat: Double? = null,
     val mapPinLon: Double? = null,
     val address: String = "",
-    val submittedIncidents: List<Incident> = emptyList()
+    val submittedIncidents: List<Incident> = emptyList(),
+    val isGeocoding: Boolean = false,
+    val nearbyIncidents: List<Incident> = emptyList(),
+    val threatAnalysis: Map<String, Int> = emptyMap()
 )
 
 class ReportViewModel(application: Application) : AndroidViewModel(application) {
@@ -42,6 +45,38 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
         loadRoutes()
         useCurrentLocation()
         loadSubmittedIncidents()
+        loadNearbyIncidents()
+    }
+
+    private fun loadNearbyIncidents() {
+        viewModelScope.launch {
+            repo.getIncidents().collect { list ->
+                val state = _uiState.value
+                val nearby = list.filter { 
+                    calculateDistance(state.lat, state.lon, it.lat, it.lon) <= 20.0 // 20km radius
+                }
+                
+                // Group by type and count
+                val analysis = nearby.groupBy { it.incident_type }
+                    .mapValues { it.value.size }
+
+                _uiState.value = _uiState.value.copy(
+                    nearbyIncidents = nearby,
+                    threatAnalysis = analysis
+                )
+            }
+        }
+    }
+
+    private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val r = 6371.0
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2)
+        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        return r * c
     }
 
     private fun loadSubmittedIncidents() {
@@ -85,13 +120,21 @@ class ReportViewModel(application: Application) : AndroidViewModel(application) 
 
     fun updateLocation(lat: Double, lon: Double) {
         viewModelScope.launch {
-            val addr = repo.geocoding.reverseGeocode(lat, lon)
-            _uiState.value = _uiState.value.copy(
-                lat = lat, lon = lon,
-                mapPinLat = lat, mapPinLon = lon,
-                address = addr,
-                resultMessage = null
-            )
+            _uiState.value = _uiState.value.copy(isGeocoding = true, lat = lat, lon = lon, resultMessage = null)
+            try {
+                val addr = repo.geocoding.reverseGeocode(lat, lon)
+                _uiState.value = _uiState.value.copy(
+                    lat = lat, lon = lon,
+                    mapPinLat = lat, mapPinLon = lon,
+                    address = addr,
+                    isGeocoding = false
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    address = "Location marked (address unavailable)",
+                    isGeocoding = false
+                )
+            }
         }
     }
 

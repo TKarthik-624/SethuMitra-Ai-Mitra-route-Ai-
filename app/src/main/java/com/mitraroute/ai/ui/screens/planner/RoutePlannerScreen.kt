@@ -28,7 +28,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.activity.compose.BackHandler
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -62,12 +64,22 @@ fun RoutePlannerScreen(
     }
 
     // Center map on user location when available and no route is active
-    LaunchedEffect(state.currentLatLng) {
-        if (state.routes.isEmpty() && state.currentLatLng != null) {
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(
-                LatLng(state.currentLatLng!!.lat, state.currentLatLng!!.lng),
-                12f
-            )
+    LaunchedEffect(state.currentLatLng, state.navigationState) {
+        if (state.currentLatLng != null) {
+            if (state.navigationState == NavigationState.NAVIGATING) {
+                // Smoothly follow user during navigation
+                cameraPositionState.animate(
+                    CameraUpdateFactory.newLatLngZoom(
+                        LatLng(state.currentLatLng!!.lat, state.currentLatLng!!.lng),
+                        16f // Closer zoom for navigation
+                    )
+                )
+            } else if (state.routes.isEmpty()) {
+                cameraPositionState.position = CameraPosition.fromLatLngZoom(
+                    LatLng(state.currentLatLng!!.lat, state.currentLatLng!!.lng),
+                    12f
+                )
+            }
         }
     }
 
@@ -99,53 +111,88 @@ fun RoutePlannerScreen(
                 .fillMaxSize()
                 .padding(padding)
         ) {
-            // 1. Search Box
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = DarkCard),
-                shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    SearchField(
-                        value = state.fromQuery,
-                        onValueChange = { viewModel.updateFromQuery(it) },
-                        placeholder = "Starting from...",
-                        icon = Icons.Default.TripOrigin
-                    )
-                    if (state.fromPredictions.isNotEmpty()) {
-                        PredictionsList(state.fromPredictions) { viewModel.selectFrom(it) }
-                    }
-
-                    Box(modifier = Modifier.fillMaxWidth().height(12.dp)) {
-                        IconButton(
-                            onClick = { viewModel.swapLocations() },
-                            modifier = Modifier.align(Alignment.Center).size(24.dp)
-                        ) {
-                            Icon(Icons.Default.SwapVert, contentDescription = "Swap", tint = Emerald400, modifier = Modifier.size(16.dp))
+            // Navigation Instruction Overlay (Top)
+            if (state.navigationState == NavigationState.NAVIGATING) {
+                Card(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = Emerald600),
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                ) {
+                    Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Directions, null, tint = Slate950, modifier = Modifier.size(32.dp))
+                        Spacer(Modifier.width(16.dp))
+                        Column {
+                            Text("NEXT INSTRUCTION", style = MaterialTheme.typography.labelSmall, color = Slate950.copy(alpha = 0.7f), fontWeight = FontWeight.Bold)
+                            Text(state.nextInstruction.ifEmpty { "Follow the route" }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = Slate950)
                         }
                     }
+                }
+            }
 
-                    SearchField(
-                        value = state.toQuery,
-                        onValueChange = { viewModel.updateToQuery(it) },
-                        placeholder = "Destination...",
-                        icon = Icons.Default.Place
-                    )
-                    if (state.toPredictions.isNotEmpty()) {
-                        PredictionsList(state.toPredictions) { viewModel.selectTo(it) }
-                    }
+            // 1. Search Box
+            if (state.navigationState == NavigationState.IDLE || state.navigationState == NavigationState.ROUTE_READY) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = DarkCard),
+                    shape = RoundedCornerShape(bottomStart = 24.dp, bottomEnd = 24.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        SearchField(
+                            value = state.fromQuery,
+                            onValueChange = { viewModel.updateFromQuery(it) },
+                            placeholder = "Starting from...",
+                            icon = Icons.Default.TripOrigin
+                        )
+                        if (state.fromPredictions.isNotEmpty()) {
+                            PredictionsList(state.fromPredictions) { viewModel.selectFrom(it) }
+                        }
 
-                    Button(
-                        onClick = { viewModel.checkRoute() },
-                        enabled = state.canCheckRoute && !state.isLoading,
-                        modifier = Modifier.fillMaxWidth().height(48.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = Emerald500),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        if (state.isLoading) {
-                            CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Slate950)
-                        } else {
-                            Text("CHECK ROUTE", fontWeight = FontWeight.Black, color = Slate950)
+                        Box(modifier = Modifier.fillMaxWidth().height(12.dp)) {
+                            IconButton(
+                                onClick = { viewModel.swapLocations() },
+                                modifier = Modifier.align(Alignment.Center).size(24.dp)
+                            ) {
+                                Icon(Icons.Default.SwapVert, contentDescription = "Swap", tint = Emerald400, modifier = Modifier.size(16.dp))
+                            }
+                        }
+
+                        SearchField(
+                            value = state.toQuery,
+                            onValueChange = { viewModel.updateToQuery(it) },
+                            placeholder = "Destination...",
+                            icon = Icons.Default.Place
+                        )
+                        if (state.toPredictions.isNotEmpty()) {
+                            PredictionsList(state.toPredictions) { viewModel.selectTo(it) }
+                        }
+
+                        Button(
+                            onClick = { viewModel.checkRoute() },
+                            enabled = state.canCheckRoute && !state.isLoading,
+                            modifier = Modifier.fillMaxWidth().height(48.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Emerald500),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            if (state.isLoading) {
+                                CircularProgressIndicator(modifier = Modifier.size(24.dp), color = Slate950)
+                            } else {
+                                Text("CHECK ROUTE", fontWeight = FontWeight.Black, color = Slate950)
+                            }
+                        }
+
+                        if (state.navigationState == NavigationState.ROUTE_READY && state.routes.isNotEmpty()) {
+                            Spacer(Modifier.height(8.dp))
+                            Button(
+                                onClick = { viewModel.startNavigation() },
+                                modifier = Modifier.fillMaxWidth().height(48.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = Amber500),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Icon(Icons.Default.Navigation, null, tint = Slate950)
+                                Spacer(Modifier.width(8.dp))
+                                Text("START NAVIGATION", fontWeight = FontWeight.Black, color = Slate950)
+                            }
                         }
                     }
                 }
@@ -162,6 +209,22 @@ fun RoutePlannerScreen(
                     ),
                     uiSettings = MapUiSettings(zoomControlsEnabled = false)
                 ) {
+                    // 1. Current Location Arrow (Only when Navigating)
+                    if (state.navigationState == NavigationState.NAVIGATING) {
+                        state.currentLatLng?.let { current ->
+                            val arrowIcon = remember { LocationTracker.createDirectionalArrow() }
+                            Marker(
+                                state = MarkerState(position = LatLng(current.lat, current.lng)),
+                                icon = arrowIcon,
+                                rotation = state.currentBearing,
+                                flat = true,
+                                anchor = Offset(0.5f, 0.5f),
+                                title = "You"
+                            )
+                        }
+                    }
+
+                    // 2. Selected Locations
                     state.selectedFrom?.let { from ->
                         Marker(
                             state = MarkerState(position = LatLng(from.geometry.location.lat, from.geometry.location.lng)),
@@ -232,22 +295,56 @@ fun RoutePlannerScreen(
                                 RiskBadge(riskLevel = active.riskLevel.lowercase())
                             }
                             HorizontalDivider(color = DarkBorder)
-                            Text("WEATHER: ${active.weatherSummary}", style = MaterialTheme.typography.bodySmall, color = TextPrimary)
                             
-                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                state.routes.forEachIndexed { index, _ ->
+                            if (state.navigationState == NavigationState.NAVIGATING) {
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                    Column {
+                                        Text("REMAINING", style = MaterialTheme.typography.labelSmall, color = TextMuted)
+                                        Text("${state.remainingDistance} • ${state.remainingDuration}", fontWeight = FontWeight.Bold, color = Emerald400)
+                                    }
                                     Button(
-                                        onClick = { viewModel.selectRoute(index) },
-                                        modifier = Modifier.weight(1f).height(36.dp),
-                                        colors = ButtonDefaults.buttonColors(containerColor = if(index == state.selectedRouteIndex) Emerald500 else DarkInput),
-                                        contentPadding = PaddingValues(0.dp)
+                                        onClick = { viewModel.stopNavigation() },
+                                        colors = ButtonDefaults.buttonColors(containerColor = Rose400),
+                                        modifier = Modifier.height(36.dp),
+                                        shape = RoundedCornerShape(8.dp)
                                     ) {
-                                        Text("Alt ${index + 1}", fontSize = 10.sp)
+                                        Text("END", color = Color.White, fontWeight = FontWeight.Bold)
                                     }
                                 }
-                                IconButton(onClick = onNavigateToAI, modifier = Modifier.size(36.dp)) {
-                                    Icon(Icons.Default.AutoAwesome, null, tint = Emerald400)
+                            } else {
+                                Text("WEATHER: ${active.weatherSummary}", style = MaterialTheme.typography.bodySmall, color = TextPrimary)
+                                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    state.routes.forEachIndexed { index, _ ->
+                                        Button(
+                                            onClick = { viewModel.selectRoute(index) },
+                                            modifier = Modifier.weight(1f).height(36.dp),
+                                            colors = ButtonDefaults.buttonColors(containerColor = if(index == state.selectedRouteIndex) Emerald500 else DarkInput),
+                                            contentPadding = PaddingValues(0.dp)
+                                        ) {
+                                            Text("Alt ${index + 1}", fontSize = 10.sp)
+                                        }
+                                    }
+                                    IconButton(onClick = onNavigateToAI, modifier = Modifier.size(36.dp)) {
+                                        Icon(Icons.Default.AutoAwesome, null, tint = Emerald400)
+                                    }
                                 }
+                            }
+                        }
+                    }
+                }
+                
+                if (state.navigationState == NavigationState.ARRIVED) {
+                    Card(
+                        modifier = Modifier.align(Alignment.Center).padding(24.dp),
+                        colors = CardDefaults.cardColors(containerColor = Emerald600),
+                        shape = RoundedCornerShape(20.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(Icons.Default.CheckCircle, null, tint = Slate950, modifier = Modifier.size(48.dp))
+                            Text("YOU HAVE ARRIVED!", fontWeight = FontWeight.Black, color = Slate950, style = MaterialTheme.typography.titleLarge)
+                            Spacer(Modifier.height(16.dp))
+                            Button(onClick = { viewModel.stopNavigation() }, colors = ButtonDefaults.buttonColors(containerColor = Slate950)) {
+                                Text("DONE")
                             }
                         }
                     }
@@ -286,22 +383,29 @@ private fun SearchField(
 @Composable
 private fun PredictionsList(results: List<PlacePrediction>, onSelect: (PlacePrediction) -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().heightIn(max = 160.dp),
+        modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp),
         colors = CardDefaults.cardColors(containerColor = DarkInput),
         border = BorderStroke(1.dp, DarkBorder)
     ) {
-        LazyColumn {
-            items(results) { res ->
-                Text(
-                    text = res.description,
-                    modifier = Modifier.fillMaxWidth().clickable { onSelect(res) }.padding(12.dp),
-                    color = TextPrimary,
-                    style = MaterialTheme.typography.bodySmall
-                )
-                HorizontalDivider(color = DarkBorder)
+        Column {
+            LazyColumn(modifier = Modifier.weight(1f, false)) {
+                items(results) { res ->
+                    Text(
+                        text = res.description,
+                        modifier = Modifier.fillMaxWidth().clickable { onSelect(res) }.padding(12.dp),
+                        color = TextPrimary,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                    HorizontalDivider(color = DarkBorder)
+                }
             }
+            Text(
+                text = "Powered by Google",
+                modifier = Modifier.padding(8.dp).align(Alignment.End),
+                style = MaterialTheme.typography.labelSmall,
+                color = TextMuted,
+                fontSize = 8.sp
+            )
         }
     }
 }
-
-
